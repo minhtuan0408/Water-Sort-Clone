@@ -7,12 +7,12 @@ public class UIManager : MonoBehaviour
 {
     public static UIManager Instance { get; private set; }
 
-    //[SerializeField] private LevelsPanel _levelsPanel;
-    [SerializeField] private GameModePanel _gameModePanel;
+    ////[SerializeField] private LevelsPanel _levelsPanel;
+    //[SerializeField] private GameModePanel _gameModePanel;
 
 
-    public GameModePanel GameModePanel => _gameModePanel;
-    //public LevelsPanel LevelsPanel => _levelsPanel;
+    //public GameModePanel GameModePanel => _gameModePanel;
+    ////public LevelsPanel LevelsPanel => _levelsPanel;
 
 
     private void Awake()

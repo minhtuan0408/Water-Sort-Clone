@@ -46,17 +46,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _groupId: 0
-  _renderer: {fileID: 0}
-  _bottomRenderer: {fileID: 0}
-  _bottomRendererSize: 0
-  _unitSize: 0
+  _renderer: {fileID: 6045555582982729196}
   _groupColors:
-  - {r: 1, g: 0.2783019, b: 0.2783019, a: 0}
-  - {r: 1, g: 0.3915094, b: 0.6225029, a: 0}
-  - {r: 0.987147, g: 0.504717, b: 1, a: 0}
-  - {r: 0.71516365, g: 0.3820755, b: 1, a: 0}
-  - {r: 0.39776424, g: 0.3726415, b: 1, a: 0}
-  - {r: 0.4764151, g: 0.75403553, b: 1, a: 0}
+  - {r: 1, g: 0.2783019, b: 0.2783019, a: 1}
+  - {r: 1, g: 0.3915094, b: 0.6225029, a: 1}
+  - {r: 0.987147, g: 0.504717, b: 1, a: 1}
+  - {r: 0.71516365, g: 0.3820755, b: 1, a: 1}
+  - {r: 0.39776424, g: 0.3726415, b: 1, a: 1}
+  - {r: 0.4764151, g: 0.75403553, b: 1, a: 1}
 --- !u!1 &4120335247103140806
 GameObject:
   m_ObjectHideFlags: 0

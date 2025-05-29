@@ -5,7 +5,7 @@ using System.Linq;
 using System;
 public class LevelManager : MonoBehaviour
 {
-    public static LevelManager Instance {get; private set;}
+    public static LevelManager Instance { get; private set; }
     public Camera Camera;
 
     [SerializeField] private Holder _holderPrefab;
@@ -20,12 +20,38 @@ public class LevelManager : MonoBehaviour
     {
         Instance = this;
         CurrentState = State.Playing;
-
         Level = GameManager.LoadGameData.Level;
 
         LoadLevel();
     }
+    public static IEnumerable<LiquidData> GetLiquidDatas(List<LiquidData> column)
+    {
+        var list = column.ToList();
 
+        for (var j = 0; j < list.Count; j++)
+        {
+            var currentGroup = list[j].groupId;
+            var count = 0;
+            for (; j < list.Count; j++)
+            {
+                if (currentGroup == list[j].groupId)
+                {
+                    count++;
+                }
+                else
+                {
+                    j--;
+                    break;
+                }
+            }
+
+            yield return new LiquidData
+            {
+                groupId = currentGroup,
+                value = count * 0.4f
+            };
+        }
+    }
     private List<List<LiquidData>> GetLiquidDataFromLevel(Level level)
     {
         var result = new List<List<LiquidData>>();
@@ -33,6 +59,8 @@ public class LevelManager : MonoBehaviour
         foreach (var holderColumn in level.map)
         {
             var liquidList = new List<LiquidData>();
+
+
             foreach (var groupId in holderColumn.values)
             {
                 liquidList.Add(new LiquidData
@@ -51,13 +79,29 @@ public class LevelManager : MonoBehaviour
     private void LoadLevel()
     {
         var listPos = PositionForHolders(Level.map.Count, 1.2f);
-        var liquidDataLists = GetLiquidDataFromLevel(Level);
-        for (var i = 0; i < 5; i++)
+        var liquidData = GetLiquidDataFromLevel(Level);
+        //foreach (var liquid in liquidDataLists)
+        //{
+        //    foreach (var value in liquid)
+        //    {
+        //        print (value.groupId);
+        //    }
+        //    print(liquid);
+        //}
+
+        for (var i = 0; i < Level.map.Count; i++)
         {
             var holder = Instantiate(_holderPrefab, listPos[i], Quaternion.identity);
-
+            holder.name = "Hoder : " + i;
             _holders.Add(holder);
-            holder.Fill(liquidDataLists[i]);
+            holder.Init();
+            var Liquids = liquidData[i];
+            var TransferLiquidData = GetLiquidDatas(Liquids);
+
+            foreach (var Liquid in TransferLiquidData)
+            {
+                holder.AddLiquid(Liquid.groupId, Liquid.value);
+            }
         }
     }
 
@@ -91,7 +135,7 @@ public class LevelManager : MonoBehaviour
 
     private void Update()
     {
-        if (CurrentState != State.Playing) 
+        if (CurrentState != State.Playing)
         {
             return;
         }
@@ -107,6 +151,13 @@ public class LevelManager : MonoBehaviour
         }
     }
 
+
+    private IEnumerator ExecuteAndThen(IEnumerator coroutine, Action onComplete)
+    {
+        yield return StartCoroutine(coroutine);  // đợi coroutine chạy xong
+        onComplete?.Invoke();                    // sau đó chạy hành động tiếp theo
+    }
+
     private void PickThisHolder(Holder holder)
     {
         if (isDropping) return;
@@ -116,14 +167,23 @@ public class LevelManager : MonoBehaviour
         var nextHolder = _holders.FirstOrDefault(x => x.IsPicked);
         if (nextHolder != null && nextHolder != holder)
         {
-            print(holder.TopLiquid.GroupId + " " + nextHolder.TopLiquid.GroupId);
-            print(nextHolder);
-            print("Next holder " + nextHolder.IsFull + " " + nextHolder.IsPicked);
-            print("holder " + holder.IsFull + " " + holder.IsPicked);
+            //print(holder.TopLiquid.GroupId + " " + nextHolder.TopLiquid.GroupId);
+            //print(nextHolder);
+            //print("Next holder " + nextHolder.IsFull + " " + nextHolder.IsPicked);
+            //print("holder " + holder.IsFull + " " + holder.IsPicked);
             if (holder.TopLiquid == null || holder.TopLiquid.GroupId == nextHolder.TopLiquid.GroupId && !holder.IsFull)
             {
-                //isDropping = true;
-                StartCoroutine(nextHolder.Drop(Take:holder));
+
+                isDropping = true;
+                StartCoroutine(ExecuteAndThen(nextHolder.Drop(Take: holder),
+
+                    () => { 
+                        CheckAndGameOver();
+                        isDropping =false;
+                    }
+                ));
+
+               
 
                 nextHolder.UndoPickedThis();
             }
@@ -142,8 +202,28 @@ public class LevelManager : MonoBehaviour
             }
         }
     }
-}
 
+
+
+    private void CheckAndGameOver()
+    {
+        Debug.Log("Check End game");
+        foreach (var holder in _holders)
+        {
+            if (holder.TopLiquid != null)
+            {
+                print("Holder thứ " + holder.name + " " + holder.TopLiquid.Value);
+                if (holder.TopLiquid && holder.TopLiquid.Value < 1.6f)
+                {
+                    return;
+                }
+            }
+        }
+        Debug.Log("End game");
+        ResourceManager.CompleteLevel(Level.no);
+        CurrentState = State.Over;
+    }
+}
 
 
 public enum State
@@ -166,6 +246,8 @@ public class Level
 { 
     public int no; 
     public List<HoldersColumn> map; 
+
+
 
     public int TotalHoldersColumn => map.Count;
 }

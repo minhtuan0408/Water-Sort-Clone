@@ -19,29 +19,16 @@ public class Holder : MonoBehaviour
 
     public Transform[] DropPoint;
     public Liquid TopLiquid => _liquids.LastOrDefault();
+    
 
     public bool IsFull => _liquids.Sum(l => l.Value) >= MaxTotalValue;
-    private void Init()
+    public void Init()
     {
         OriginalPoint = transform.position;
         IsPicked = false;
         PickPoint = transform.position + 0.5f * Vector3.up;
-
-        for (int i = 0; i <4; i++)
-        {
-            AddLiquid(groupId: i, value:0.4f);  
-        } 
     }
 
-    public void Fill(List<LiquidData> liquidDataList)
-    {
-        Init();
-
-        foreach (var liquid in liquidDataList)
-        {
-            AddLiquid(liquid.groupId, liquid.value);
-        }
-    }
 
     private void StopMoveIfAlready()
     {
@@ -88,7 +75,6 @@ public class Holder : MonoBehaviour
         }
     }
 
-    
     public void AddLiquid (int groupId, float value = 0)
     {
         var topPoint = GetTopPoint();
@@ -131,21 +117,20 @@ public class Holder : MonoBehaviour
         if (maxValueTaked < 0.01f && Take.TopLiquid == null)
         {
             top.Value -= valueTaked;
-
+            print("Lấy hết");
             if (top.Value <= 0)
             {
                 _liquids.Remove(top);
                 Destroy(top.gameObject);
             }
-
             Take.AddLiquid(groupId, valueTaked);
         }
         else
         {
             Take.TopLiquid.Value += valueTaked;
             top.Value -= valueTaked;
-
-            if (top.Value <= 0)
+            print("Lấy một phần");
+            if (top.Value  <.1f)
             {
                 _liquids.Remove(top);
                 Destroy(top.gameObject);
@@ -156,6 +141,38 @@ public class Holder : MonoBehaviour
         print(Take.IsFull + " " + ehe);
 
         yield return null;
+    }
+
+    public IEnumerator TransferLiquidSmoothly(Liquid from, Liquid to, float value, float duration)
+    {
+        float elapsed = 0f;
+        float startFrom = from.Value;
+        float startTo = to.Value;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / duration;
+
+            float newFrom = Mathf.Lerp(startFrom, startFrom - value, t);
+            float newTo = Mathf.Lerp(startTo, startTo + value, t);
+
+            from.Value = newFrom;
+            to.Value = newTo;
+
+
+
+            yield return null;
+        }
+
+        from.Value = startFrom - value;
+        to.Value = startTo + value;
+
+        if (from.Value <= 0.01f)
+        {
+            _liquids.Remove(from);
+            Destroy(from.gameObject);
+        }
     }
 
 }

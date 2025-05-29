@@ -64,4 +64,9 @@ public partial class ResourceManager
     {
         return PlayerPrefs.GetInt($"Level_Complete");
     }
+
+    public static void CompleteLevel(int lvl)
+    {
+        PlayerPrefs.SetInt($"Level_Complete", lvl);
+    }
 }

@@ -116,20 +116,23 @@ public class Holder : MonoBehaviour
 
         if (maxValueTaked < 0.01f && Take.TopLiquid == null)
         {
-            top.Value -= valueTaked;
-            print("Lấy hết");
+            Take.AddLiquid(groupId, 0f);
+            yield return StartCoroutine(TransferLiquidSmoothly(top, Take.TopLiquid, valueTaked, 0.5f));
+            //print("Lấy hết");
             if (top.Value <= 0)
             {
                 _liquids.Remove(top);
                 Destroy(top.gameObject);
             }
-            Take.AddLiquid(groupId, valueTaked);
+
         }
         else
         {
-            Take.TopLiquid.Value += valueTaked;
-            top.Value -= valueTaked;
-            print("Lấy một phần");
+            //Take.TopLiquid.Value += valueTaked;
+            //top.Value -= valueTaked
+            yield return StartCoroutine(TransferLiquidSmoothly(top, Take.TopLiquid, valueTaked, 0.5f));
+
+            //print("Lấy một phần");
             if (top.Value  <.1f)
             {
                 _liquids.Remove(top);
@@ -138,7 +141,7 @@ public class Holder : MonoBehaviour
         }
 
         float ehe = Take._liquids.Sum(l => l.Value);
-        print(Take.IsFull + " " + ehe);
+        //print(Take.IsFull + " " + ehe);
 
         yield return null;
     }
@@ -151,6 +154,7 @@ public class Holder : MonoBehaviour
 
         while (elapsed < duration)
         {
+
             elapsed += Time.deltaTime;
             float t = elapsed / duration;
 
@@ -164,7 +168,7 @@ public class Holder : MonoBehaviour
 
             yield return null;
         }
-
+        SoundManager.Instance.SFX.Stop();
         from.Value = startFrom - value;
         to.Value = startTo + value;
 

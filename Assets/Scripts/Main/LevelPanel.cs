@@ -13,10 +13,6 @@ public class LevelPanel : MonoBehaviour
     {
         LoadList();
     }
-    private void Start()
-    {
-        
-    }
     private void LoadList()
     {
         var list = ResourceManager.GetLevels().ToList();

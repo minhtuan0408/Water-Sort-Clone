@@ -16,13 +16,20 @@ public class LevelManager : MonoBehaviour
     public List<Holder> _holders = new List<Holder>();
 
     public Level Level { get; private set; }
+
+    public GameObject FinishGame;
     private void Awake()
     {
-        Instance = this;
-        CurrentState = State.Playing;
-        Level = GameManager.LoadGameData.Level;
 
+        Instance = this;
+        Level = GameManager.LoadGameData.Level;
+        IsPlaying();
         LoadLevel();
+    }
+
+    public void IsPlaying()
+    {
+        CurrentState = State.Playing;
     }
     public static IEnumerable<LiquidData> GetLiquidDatas(List<LiquidData> column)
     {
@@ -164,6 +171,7 @@ public class LevelManager : MonoBehaviour
 
         // lấy Holder nếu IsPicked = True;
 
+
         var nextHolder = _holders.FirstOrDefault(x => x.IsPicked);
         if (nextHolder != null && nextHolder != holder)
         {
@@ -175,11 +183,12 @@ public class LevelManager : MonoBehaviour
             {
 
                 isDropping = true;
+                SoundManager.PlaySFX("Drop");
                 StartCoroutine(ExecuteAndThen(nextHolder.Drop(Take: holder),
 
-                    () => { 
+                    () => {
                         CheckAndGameOver();
-                        isDropping =false;
+                        isDropping = false;
                     }
                 ));
 
@@ -189,15 +198,20 @@ public class LevelManager : MonoBehaviour
             }
             else
             {
+                SoundManager.PlaySFX("Push");
                 nextHolder.UndoPickedThis();
             }
         }
         else if (holder.TopLiquid != null)
         {
             if (!holder.IsPicked)
+            {
+                SoundManager.PlaySFX("Pop");
                 holder.PickThis();
+            }
             else
             {
+                SoundManager.PlaySFX("Push");
                 holder.UndoPickedThis();
             }
         }
@@ -213,14 +227,15 @@ public class LevelManager : MonoBehaviour
             if (holder.TopLiquid != null)
             {
                 print("Holder thứ " + holder.name + " " + holder.TopLiquid.Value);
-                if (holder.TopLiquid && holder.TopLiquid.Value < 1.6f)
+                if (holder.TopLiquid && holder.TopLiquid.Value < 1.6f - 0.01f)
                 {
+                    print("Holder thứ " + holder.name);
                     return;
                 }
             }
         }
-        Debug.Log("End game");
         ResourceManager.CompleteLevel(Level.no);
+        FinishGame.SetActive(true);
         CurrentState = State.Over;
     }
 }
